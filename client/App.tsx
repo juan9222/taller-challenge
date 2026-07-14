@@ -23,10 +23,10 @@ function App() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
+    const previous = slots;
     try {
       // Optimistically mark the slot as taken so the UI updates instantly
-      selected.taken = true;
-      setSlots(slots);
+      setSlots(slots.map((s) => (s.id === selected.id ? { ...s, taken: true } : s)));
 
       const b = await createBooking({
         slotId: selected.id,
@@ -38,6 +38,8 @@ function App() {
       setSelected(null);
       setName(""); setEmail(""); setPhone("");
     } catch (err) {
+      // Roll the optimistic update back so the slot stays bookable
+      setSlots(previous);
       setMessage({ kind: "err", text: (err as Error).message });
     }
   }
