@@ -79,17 +79,21 @@ app.post("/api/bookings", (req: Request, res: Response) => {
     return res.status(409).json({ error: "slot already booked" });
   }
 
+  // Record the booking in the same synchronous block as the availability
+  // check above — no await/timer in between — so a concurrent request for the
+  // same slot is guaranteed to see it and get the 409.
+  const booking: Booking = {
+    id: "b" + (bookings.length + 1),
+    slotId,
+    customerName: customerName ?? "",
+    customerEmail,
+    customerPhone: customerPhone ?? "",
+    createdAt: new Date().toISOString(),
+  };
+  bookings.push(booking);
+
   // Simulate the latency of writing to a database
   setTimeout(() => {
-    const booking: Booking = {
-      id: "b" + (bookings.length + 1),
-      slotId,
-      customerName: customerName ?? "",
-      customerEmail,
-      customerPhone: customerPhone ?? "",
-      createdAt: new Date().toISOString(),
-    };
-    bookings.push(booking);
     res.status(201).json(booking);
   }, 200);
 });
