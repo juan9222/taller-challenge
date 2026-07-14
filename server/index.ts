@@ -70,6 +70,11 @@ app.post("/api/bookings", (req: Request, res: Response) => {
     return res.status(400).json({ error: "slotId and customerEmail are required" });
   }
 
+  // Pragmatic shape check: non-empty local part, one @, domain with a dot
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    return res.status(400).json({ error: "customerEmail is not a valid email address" });
+  }
+
   const slot = slots.find((s) => s.id === slotId);
   if (!slot) return res.status(404).json({ error: "slot not found" });
 
