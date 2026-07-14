@@ -10,6 +10,7 @@ function App() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchSlots().then(setSlots);
@@ -22,7 +23,9 @@ function App() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return;
+    // Ignore re-submission while a booking request is in flight
+    if (!selected || submitting) return;
+    setSubmitting(true);
     const previous = slots;
     try {
       // Optimistically mark the slot as taken so the UI updates instantly
@@ -41,6 +44,8 @@ function App() {
       // Roll the optimistic update back so the slot stays bookable
       setSlots(previous);
       setMessage({ kind: "err", text: (err as Error).message });
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -69,7 +74,7 @@ function App() {
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
           <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <button type="submit">Confirm booking</button>
+          <button type="submit" disabled={submitting}>Confirm booking</button>
         </form>
       )}
 
